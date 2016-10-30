@@ -609,11 +609,13 @@ export default class SegmentLoader extends videojs.EventTarget {
 
     // trigger an event for other errors
     if (!request.aborted && error) {
-      // abort will clear xhr_
+      // abort will clear xhr_ and request properties
       keyXhrRequest = this.xhr_.keyXhr;
+      let status = request.status;
+
       this.abort_();
       this.error({
-        status: request.status,
+        status,
         message: request === keyXhrRequest ?
           'HLS key request error at URL: ' + segment.key.uri :
           'HLS segment request error at URL: ' + segmentInfo.uri,
