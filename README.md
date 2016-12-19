@@ -1,8 +1,11 @@
-# video.js HLS Source Handler
+# video.js HLS Source Handler [![Build Status](https://travis-ci.org/videojs/videojs-contrib-hls.svg?branch=master)](https://travis-ci.org/videojs/videojs-contrib-hls)
+
 
 Play back HLS with video.js, even where it's not natively supported.
 
-[![Build Status](https://travis-ci.org/videojs/videojs-contrib-hls.svg?branch=master)](https://travis-ci.org/videojs/videojs-contrib-hls)
+Lead Maintainer: Jon-Carlos Rivera [@imbcmdth](https://github.com/imbcmdth)
+
+Maintenance Status: Stable
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -15,8 +18,6 @@ Play back HLS with video.js, even where it's not natively supported.
   - [Manual Build](#manual-build)
 - [Contributing](#contributing)
 - [Getting Started](#getting-started)
-- [Known Issues](#known-issues)
-  - [IE11](#ie11)
 - [Documentation](#documentation)
   - [Options](#options)
     - [How to use](#how-to-use)
@@ -24,6 +25,7 @@ Play back HLS with video.js, even where it's not natively supported.
       - [Source](#source)
     - [List](#list)
       - [withCredentials](#withcredentials)
+      - [useCueTags](#usecuetags)
   - [Runtime Properties](#runtime-properties)
     - [hls.playlists.master](#hlsplaylistsmaster)
     - [hls.playlists.media](#hlsplaylistsmedia)
@@ -39,6 +41,9 @@ Play back HLS with video.js, even where it's not natively supported.
     - [mediachange](#mediachange)
   - [In-Band Metadata](#in-band-metadata)
 - [Hosting Considerations](#hosting-considerations)
+- [Known Issues](#known-issues)
+  - [IE11](#ie11)
+  - [Fragmented MP4 Support](#fragmented-mp4-support)
   - [Testing](#testing)
 - [Release History](#release-history)
 - [Building](#building)
@@ -60,7 +65,7 @@ npm install --save videojs-contrib-hls
 Select a version of HLS from the [CDN](https://cdnjs.com/libraries/videojs-contrib-hls)
 
 ### Releases
-Download a release of [videojs-contrib-hls](https://github.com/videojs/videojs-contrib-hls/release)
+Download a release of [videojs-contrib-hls](https://github.com/videojs/videojs-contrib-hls/releases)
 
 ### Manual Build
 Download a copy of this git repository and then follow the steps in [Building](#building)
@@ -86,16 +91,6 @@ player.play();
 ```
 
 Check out our [live example](http://jsbin.com/liwecukasi/edit?html,output) if you're having trouble.
-
-## Known Issues
-Issues that are currenty know about with workarounds. If you want to
-help find a solution that would be appreciated!
-
-### IE11
-In some IE11 setups there are issues working with it's native HTML
-SourceBuffers functionality. This leads to various issues, such as
-videos stopping playback with media decode errors. The known workaround
-for this issues is to force the player to use flash when running on IE11.
 
 ## Documentation
 [HTTP Live Streaming](https://developer.apple.com/streaming/) (HLS) has
@@ -125,7 +120,7 @@ Check out the [full documentation](docs/) for details on how HLS works
 and advanced configuration. A description of the [adaptive switching
 behavior](docs/bitrate-switching.md) is available, too.
 
-videojs-contrib-hls support a bunch of HLS v2 and v3 features. Here
+videojs-contrib-hls supports a bunch of HLS features. Here
 are some highlights:
 
 - video-on-demand and live playback modes
@@ -143,6 +138,9 @@ are some highlights:
   as possible with standard HTML APIs
 - Stream with multiple audio tracks and switching to those audio tracks
   (see the docs folder) for info
+- Media content in
+  [fragmented MP4s](https://developer.apple.com/videos/play/wwdc2016/504/)
+  instead of the MPEG2-TS container format.
 
 [0]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track
 
@@ -211,6 +209,37 @@ headers require the addition of `Access-Control-Allow-Credentials` header which
 is set to `true`.
 See html5rocks's [article](http://www.html5rocks.com/en/tutorials/cors/)
 for more info.
+
+##### useCueTags
+* Type: `boolean`
+* can be used as an initialization option
+
+When the `useCueTags` property is set to `true,` a text track is created with
+label 'ad-cues' and kind 'metadata'. The track is then added to
+`player.textTracks()`. Changes in active cue may be
+tracked by following the Video.js cue points API for text tracks. For example:
+
+```javascript
+let textTracks = player.textTracks();
+let cuesTrack;
+
+for (let i = 0; i < textTracks.length; i++) {
+  if (textTracks[i].label === 'ad-cues') {
+    cuesTrack = textTracks[i];
+  }
+}
+
+cuesTrack.addEventListener('cuechange', function() {
+  let activeCues = cuesTrack.activeCues;
+
+  for (let i = 0; i < activeCues.length; i++) {
+    let activeCue = activeCues[i];
+
+    console.log('Cue runs from ' + activeCue.startTime +
+                ' to ' + activeCue.endTime);
+  }
+});
+```
 
 ### Runtime Properties
 Runtime properties are attached to the tech object when HLS is in
@@ -400,6 +429,23 @@ headers](https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS)
 configured. Easy [instructions are
 available](http://enable-cors.org/server.html) for popular webservers
 and most CDNs should have no trouble turning CORS on for your account.
+
+
+## Known Issues
+Issues that are currenty know about with workarounds. If you want to
+help find a solution that would be appreciated!
+
+### IE11
+In some IE11 setups there are issues working with its native HTML
+SourceBuffers functionality. This leads to various issues, such as
+videos stopping playback with media decode errors. The known workaround
+for this issues is to force the player to use flash when running on IE11.
+
+### Fragmented MP4 Support
+Edge has native support for HLS but only in the MPEG2-TS container. If
+you attempt to play an HLS stream with fragmented MP4 segments, Edge
+will stall. Fragmented MP4s are only supported on browser that have
+[Media Source Extensions](http://caniuse.com/#feat=mediasource) available.
 
 ### Testing
 
