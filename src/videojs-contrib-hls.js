@@ -23,6 +23,7 @@ import reloadSourceOnError from './reload-source-on-error';
 const Hls = {
   PlaylistLoader,
   Playlist,
+  MasterPlaylistController,
   Decrypter,
   AsyncStream,
   decrypt,
